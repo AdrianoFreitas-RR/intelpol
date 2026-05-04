@@ -9,6 +9,7 @@ const PaidPage          = lazy(() => import('./modules/inteligencia-politica/pag
 const AnomaliesPage     = lazy(() => import('./modules/inteligencia-politica/pages/AnomaliesPage').then(m => ({ default: m.AnomaliesPage })));
 const NewsPage          = lazy(() => import('./modules/inteligencia-politica/pages/NewsPage').then(m => ({ default: m.NewsPage })));
 const AgentChatPage     = lazy(() => import('./modules/inteligencia-politica/pages/AgentChatPage').then(m => ({ default: m.AgentChatPage })));
+const SystemPage        = lazy(() => import('./modules/inteligencia-politica/pages/SystemPage').then(m => ({ default: m.SystemPage })));
 
 function PageFallback() {
   return <div className='p-12 text-zinc-500 text-sm'>carregando…</div>;
@@ -28,6 +29,7 @@ export default function App() {
             <Route path='/anomalias' element={<AnomaliesPage />} />
             <Route path='/news' element={<NewsPage />} />
             <Route path='/agent' element={<AgentChatPage />} />
+            <Route path='/system' element={<SystemPage />} />
             <Route path='*' element={<div className='p-8 text-zinc-500'>404 — rota não encontrada</div>} />
           </Routes>
         </Suspense>

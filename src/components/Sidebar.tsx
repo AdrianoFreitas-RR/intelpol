@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Activity, BarChart3, AlertTriangle, Newspaper, Users, Sparkles, ChevronLeft, ChevronRight, Radio } from 'lucide-react';
+import { Activity, BarChart3, AlertTriangle, Newspaper, Users, Sparkles, ChevronLeft, ChevronRight, Radio, Settings } from 'lucide-react';
 
 const NAV = [
   { to: '/overview',  label: 'Overview',   icon: Activity },
@@ -8,6 +8,7 @@ const NAV = [
   { to: '/anomalias', label: 'Anomalias',  icon: AlertTriangle },
   { to: '/news',      label: 'Notícias',   icon: Newspaper },
   { to: '/agent',     label: 'AgentDock',  icon: Sparkles },
+  { to: '/system',    label: 'Sistema',    icon: Settings },
 ];
 
 export function Sidebar({ open, onToggle }: { open: boolean; onToggle: () => void }) {

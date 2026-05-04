@@ -133,3 +133,13 @@ export function useAgentLabels() {
     mutationFn: ({ keywords, n_posts, contexto }) => (radarAPI as any).agentLabels(keywords, n_posts, contexto),
   });
 }
+
+import type { SystemPipelineResponse } from '../api/client';
+export function useSystemPipeline() {
+  return useQuery<SystemPipelineResponse, RadarAPIError>({
+    queryKey: ['system','pipeline'],
+    queryFn: () => (radarAPI as any).systemPipeline(),
+    staleTime: STALE.short,
+    refetchInterval: 30_000,
+  });
+}

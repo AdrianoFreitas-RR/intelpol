@@ -300,3 +300,15 @@ Object.assign(radarAPI, {
       body: JSON.stringify({ keywords, n_posts, contexto }),
     }),
 });
+
+// ============== SYSTEM endpoints ==============
+export interface SystemPipelineResponse {
+  ts: string;
+  pull_state: { total_entries: number; data: any[]; most_stale: any[] };
+  crons: Record<string, { last_run: string | null; log_path?: string; last_log_lines: string[] }>;
+  webhooks: { total_events: number; last_10: any[]; log_size_bytes: number };
+  news_rate: { last_24h?: number; error?: string };
+}
+Object.assign(radarAPI, {
+  systemPipeline: () => request<SystemPipelineResponse>('/api/system/pipeline'),
+});
