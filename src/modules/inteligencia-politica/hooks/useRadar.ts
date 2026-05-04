@@ -3,7 +3,7 @@
  * Cada endpoint da API tem seu hook com cache padronizado.
  */
 import { useQuery } from "@tanstack/react-query";
-import { radarAPI } from "../api/client";
+import { radarAPI, RadarAPIError } from "../api/client";
 
 const STALE = {
   short: 1000 * 60 * 5,    // 5min — KPIs voláteis
@@ -91,5 +91,45 @@ export function useFraming(minPosts: number = 20) {
     queryKey: ["radar", "framing", minPosts],
     queryFn: () => radarAPI.framing(minPosts),
     staleTime: STALE.medium,
+  });
+}
+
+// ============== NEWS hooks ==============
+import type { NewsListResponse, NewsStatsResponse, AgentDiagnoseResponse, AgentChatMessage, AgentChatResponse, AgentLabelsResponse } from '../api/client';
+
+export function useNews(params: { ator_id?: string; tema?: string; fonte?: string; period?: string; limit?: number; offset?: number } = {}) {
+  return useQuery<NewsListResponse, RadarAPIError>({
+    queryKey: ['news', params],
+    queryFn: () => (radarAPI as any).news(params),
+    staleTime: STALE.short,
+  });
+}
+
+export function useNewsStats(period: string = '30d') {
+  return useQuery<NewsStatsResponse, RadarAPIError>({
+    queryKey: ['news', 'stats', period],
+    queryFn: () => (radarAPI as any).newsStats(period),
+    staleTime: STALE.medium,
+  });
+}
+
+// ============== AGENT hooks (mutations) ==============
+import { useMutation } from '@tanstack/react-query';
+
+export function useAgentDiagnose() {
+  return useMutation<AgentDiagnoseResponse, RadarAPIError, { ator_id: string; period?: string; contexto_extra?: string }>({
+    mutationFn: ({ ator_id, period='30d', contexto_extra }) => (radarAPI as any).agentDiagnose(ator_id, period, contexto_extra),
+  });
+}
+
+export function useAgentChat() {
+  return useMutation<AgentChatResponse, RadarAPIError, { messages: AgentChatMessage[]; contexto_ator_id?: string }>({
+    mutationFn: ({ messages, contexto_ator_id }) => (radarAPI as any).agentChat(messages, contexto_ator_id),
+  });
+}
+
+export function useAgentLabels() {
+  return useMutation<AgentLabelsResponse, RadarAPIError, { keywords: string[]; n_posts?: number; contexto?: string }>({
+    mutationFn: ({ keywords, n_posts, contexto }) => (radarAPI as any).agentLabels(keywords, n_posts, contexto),
   });
 }

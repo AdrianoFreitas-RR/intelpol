@@ -1,166 +1,172 @@
-/**
- * RadarOverviewPage — Tela 1 prototype mínimo conectado à API.
- * Versão V0 do MVP — KPIs + ranking simples. Refinamento visual virá com Tremor cards + ECharts.
- */
-import { useOverview, useHealth } from "../hooks/useRadar";
+import { Link } from 'react-router-dom';
+import { Users, Eye, DollarSign, Megaphone, Newspaper, AlertTriangle, ChevronRight } from 'lucide-react';
+import { useOverview, useNewsStats, useNews, useAnomalies } from '../hooks/useRadar';
+import { KPICard } from '../../../components/KPICard';
 
-const fmt = (n: number | null | undefined): string => {
-  if (n == null) return "—";
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-  return n.toString();
+const fmt = (n: number | null | undefined) => n == null ? '—' : new Intl.NumberFormat('pt-BR').format(n);
+const fmtBRL = (n: number | null | undefined) => n == null ? '—' : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(n);
+
+const ATOR_LABELS: Record<string, string> = {
+  antonio_denarium: 'Denarium', edilson_damiao: 'Damião', teresa_surita: 'Surita',
+  arthur_henrique: 'Arthur', soldado_sampaio: 'Sampaio', romero_juca: 'Jucá',
+  mecias_de_jesus: 'Mecias', hiran_goncalves: 'Hiran', chico_rodrigues: 'Chico',
 };
 
-const fmtBRL = (n: number | null | undefined): string => {
-  if (n == null) return "—";
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 0,
-  }).format(n);
+const TEMA_LABELS: Record<string, string> = {
+  'tse-cassacao': 'TSE / Cassação', 'governo-rr': 'Governo RR',
+  'eleicao-suplementar': 'Eleição Suplementar', 'senado-rr-2026': 'Senado RR 2026',
+  'ale-rr': 'ALE-RR', 'prefeitura-bv': 'Prefeitura BV',
+  'federacao-pl-uniao': 'Federação PL/União/PP',
 };
 
-const blocoColors: Record<string, string> = {
-  bolsonarista: "bg-amber-500/20 text-amber-300 border-amber-500/40",
-  centro: "bg-sky-500/20 text-sky-300 border-sky-500/40",
-  independente: "bg-violet-500/20 text-violet-300 border-violet-500/40",
-  esquerda: "bg-rose-500/20 text-rose-300 border-rose-500/40",
-};
-
-export default function RadarOverviewPage() {
-  const health = useHealth();
-  const { data, isLoading, error } = useOverview("30d");
-
-  if (isLoading) {
-    return (
-      <div className="p-8 text-zinc-400">Carregando inteligência política RR...</div>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <div className="p-8 text-rose-400">
-        Erro ao carregar API:{" "}
-        {error instanceof Error ? error.message : "desconhecido"}
-        <br />
-        <span className="text-zinc-500 text-sm">
-          Verifique se a API está rodando em http://10.10.1.22:3334/api/health
-        </span>
-      </div>
-    );
-  }
+export function RadarOverviewPage() {
+  const overview = useOverview('30d');
+  const newsStats = useNewsStats('7d');
+  const news = useNews({ period: '3d', limit: 10 });
+  const anomalies = useAnomalies('7d');
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 p-6 md:p-10">
-      <header className="mb-8">
-        <div className="flex items-baseline justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Radar IP-RR
-            </h1>
-            <p className="text-sm text-zinc-400 mt-1">
-              Inteligência Política Digital · Roraima · Janela {data.period}
-            </p>
-          </div>
-          <div className="text-xs text-zinc-500 font-mono">
-            {health.data?.status === "ok" ? (
-              <span className="inline-flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                API v{health.data.version} · {health.data.row_counts.posts} posts ·{" "}
-                {health.data.row_counts.ads} ads · {health.data.row_counts.tse_candidatos}{" "}
-                candidatos TSE
-              </span>
-            ) : (
-              <span>API offline</span>
-            )}
-          </div>
+    <div className="space-y-6 max-w-[1400px] mx-auto">
+      {/* Header */}
+      <div className="flex items-end justify-between">
+        <div>
+          <div className="text-xs text-zinc-500 uppercase tracking-wide">Overview</div>
+          <h2 className="text-2xl font-semibold mt-1">Cenário político · últimos 30 dias</h2>
         </div>
-      </header>
+        <div className="text-xs text-zinc-500">Eleição suplementar em <span className="text-orange-400">21/06</span></div>
+      </div>
 
-      {/* KPI Strip */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        {[
-          { label: "Atores", value: data.kpis.atores, color: "text-zinc-100" },
-          { label: "Alcance total", value: fmt(data.kpis.alcance_total), color: "text-sky-300" },
-          { label: "Paid R$ 12m", value: fmtBRL(data.kpis.paid_total), color: "text-emerald-300" },
-          { label: "Ads na janela", value: fmt(data.kpis.ads_janela), color: "text-amber-300" },
-        ].map((kpi) => (
-          <div
-            key={kpi.label}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl p-5"
-          >
-            <div className="text-xs uppercase tracking-wider text-zinc-500 font-medium">
-              {kpi.label}
-            </div>
-            <div className={`text-3xl font-bold mt-2 ${kpi.color}`}>
-              {kpi.value}
-            </div>
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <KPICard label="Atores monitorados" value={fmt(overview.data?.kpis.atores)} accent="zinc" icon={<Users size={16} />} />
+        <KPICard label="Alcance total" value={fmt(overview.data?.kpis.alcance_total)} accent="sky" icon={<Eye size={16} />} />
+        <KPICard label="Spend pago" value={fmtBRL(overview.data?.kpis.paid_total)} accent="orange" icon={<DollarSign size={16} />} />
+        <KPICard label="Ads ativos" value={fmt(overview.data?.kpis.ads_janela)} accent="violet" icon={<Megaphone size={16} />} />
+      </div>
+
+      {/* Two-column: Ranking + News digest */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Ranking de atores */}
+        <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+            <h3 className="font-medium">Ranking 30d</h3>
+            <Link to="/atores" className="text-xs text-zinc-500 hover:text-zinc-300 flex items-center gap-1">
+              Ver todos <ChevronRight size={12} />
+            </Link>
           </div>
-        ))}
-      </section>
+          {overview.isLoading ? (
+            <div className="p-8 text-zinc-500 text-sm">carregando…</div>
+          ) : overview.error ? (
+            <div className="p-8 text-red-400 text-sm">erro: {overview.error.message}</div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="text-xs text-zinc-500 uppercase">
+                <tr><th className="px-5 py-2 text-left">Ator</th>
+                  <th className="px-3 py-2 text-left">Bloco</th>
+                  <th className="px-3 py-2 text-right">Followers</th>
+                  <th className="px-3 py-2 text-right">Pago</th>
+                  <th className="px-3 py-2 text-right">Ads</th></tr>
+              </thead>
+              <tbody>
+                {overview.data?.ranking.slice(0, 9).map((r, i) => (
+                  <tr key={r.ator_id} className={`border-t border-zinc-800/50 hover:bg-zinc-800/30 ${i===0 ? 'bg-orange-950/10':''}`}>
+                    <td className="px-5 py-2.5">
+                      <Link to={`/atores/${r.ator_id}`} className="hover:text-orange-400">
+                        {r.nome_curto}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2.5 text-zinc-400 text-xs">{r.bloco_ideologico ?? '—'}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{fmt(r.followers)}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-orange-400">{fmtBRL(r.paid_total)}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-violet-400">{fmt(r.ads_count)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
 
-      {/* Ranking */}
-      <section>
-        <h2 className="text-lg font-semibold mb-4 text-zinc-200">
-          Ranking por seguidores (FB+IG)
-        </h2>
+        {/* News stats compact */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-zinc-900/50 border-b border-zinc-800">
-              <tr className="text-left text-zinc-400 text-xs uppercase tracking-wider">
-                <th className="px-4 py-3 font-medium">#</th>
-                <th className="px-4 py-3 font-medium">Ator</th>
-                <th className="px-4 py-3 font-medium">Partido</th>
-                <th className="px-4 py-3 font-medium">Bloco</th>
-                <th className="px-4 py-3 font-medium text-right">Seguidores</th>
-                <th className="px-4 py-3 font-medium text-right">Paid R$</th>
-                <th className="px-4 py-3 font-medium text-right">Ads</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.ranking.map((r, i) => (
-                <tr
-                  key={r.ator_id}
-                  className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors"
-                >
-                  <td className="px-4 py-3 text-zinc-500 font-mono">{i + 1}</td>
-                  <td className="px-4 py-3 font-medium text-zinc-100">{r.nome_curto}</td>
-                  <td className="px-4 py-3 text-zinc-300 font-mono text-xs">
-                    {r.partido_atual ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {r.bloco_ideologico ? (
-                      <span
-                        className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium border ${
-                          blocoColors[r.bloco_ideologico] ??
-                          "bg-zinc-700/40 text-zinc-300 border-zinc-600"
-                        }`}
-                      >
-                        {r.bloco_ideologico}
-                      </span>
-                    ) : (
-                      <span className="text-zinc-600">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right text-sky-300 font-mono">
-                    {fmt(r.followers)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-emerald-300 font-mono">
-                    {fmtBRL(r.paid_total)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-amber-300 font-mono">
-                    {fmt(r.ads_count)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+            <h3 className="font-medium flex items-center gap-2"><Newspaper size={16} className="text-emerald-400" /> Imprensa 7d</h3>
+            <Link to="/news" className="text-xs text-zinc-500 hover:text-zinc-300">ver feed</Link>
+          </div>
+          <div className="p-5 space-y-4">
+            <div className="text-xs text-zinc-500 uppercase">Total menções</div>
+            <div className="text-3xl font-semibold tabular-nums">{fmt(newsStats.data?.total)}</div>
+            <div>
+              <div className="text-xs text-zinc-500 uppercase mb-2">Top atores</div>
+              <div className="space-y-1.5">
+                {newsStats.data?.atores.slice(0, 5).map(a => (
+                  <div key={a.ator_id} className="flex justify-between text-sm">
+                    <Link to={`/atores/${a.ator_id}`} className="hover:text-orange-400">{ATOR_LABELS[a.ator_id] ?? a.ator_id}</Link>
+                    <span className="text-zinc-500 tabular-nums">{a.n}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-zinc-500 uppercase mb-2">Top temas</div>
+              <div className="space-y-1.5">
+                {newsStats.data?.temas.slice(0, 4).map(t => (
+                  <div key={t.tema} className="flex justify-between text-sm">
+                    <span className="text-zinc-300">{TEMA_LABELS[t.tema] ?? t.tema}</span>
+                    <span className="text-zinc-500 tabular-nums">{t.n}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
 
-      <footer className="mt-12 text-center text-xs text-zinc-600">
-        Radar IP-RR v0.7 · MVP em construção · Backend agserver:3334
-      </footer>
+      {/* News headlines + Anomalias side-by-side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-zinc-800">
+            <h3 className="font-medium">Últimas manchetes (3d)</h3>
+          </div>
+          <ul className="divide-y divide-zinc-800">
+            {news.isLoading && <li className="p-5 text-zinc-500 text-sm">carregando…</li>}
+            {news.data?.data.slice(0, 6).map(n => (
+              <li key={n.url} className="px-5 py-3 hover:bg-zinc-800/30">
+                <a href={n.url} target="_blank" rel="noopener noreferrer" className="block">
+                  <div className="flex items-center gap-2 text-xs text-zinc-500 mb-1">
+                    <span>{n.fonte.replace(/^gn:/,'GoogleNews ')}</span>
+                    {n.data_pub && <span>·</span>}
+                    {n.data_pub && <span>{new Date(n.data_pub).toLocaleDateString('pt-BR')}</span>}
+                  </div>
+                  <div className="text-sm line-clamp-2 hover:text-orange-400">{n.titulo}</div>
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {n.atores_match.slice(0,3).map(a => (
+                      <span key={a} className="text-[10px] px-1.5 py-0.5 rounded bg-orange-950/40 text-orange-400 border border-orange-900/40">{ATOR_LABELS[a] ?? a}</span>
+                    ))}
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-zinc-800">
+            <h3 className="font-medium flex items-center gap-2"><AlertTriangle size={16} className="text-red-400" /> Anomalias 7d</h3>
+          </div>
+          <ul className="divide-y divide-zinc-800">
+            {anomalies.isLoading && <li className="p-5 text-zinc-500 text-sm">carregando…</li>}
+            {anomalies.data?.data?.slice(0, 8).map((a, i) => (
+              <li key={i} className="px-5 py-2.5 hover:bg-zinc-800/30 text-sm">
+                <div className="flex justify-between">
+                  <span><Link to={`/atores/${a.ator_id}`} className="hover:text-orange-400">{ATOR_LABELS[a.ator_id] ?? a.ator_id}</Link>
+                    <span className="text-zinc-500"> · {a.metric} {a.plataforma}</span></span>
+                  <span className={`text-xs ${a.severity === 'high' ? 'text-red-400' : 'text-amber-400'}`}>z={a.zscore?.toFixed(1)}</span>
+                </div>
+              </li>
+            )) ?? <li className="p-5 text-zinc-500 text-sm">sem anomalias detectadas</li>}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }

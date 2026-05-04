@@ -235,3 +235,68 @@ export interface FramingResponse {
   ator_por_cluster: Array<{ cluster_id: number; ator_id: string; n: number; rk: number }>;
   cluster_por_ator: Array<{ ator_id: string; cluster_id: number; n: number; rk: number }>;
 }
+
+// ============== NEWS endpoints ==============
+export interface NewsItem {
+  url: string;
+  fonte: string;
+  titulo: string;
+  lead: string;
+  data_pub: string | null;
+  capturado_em: string;
+  origem: string;
+  atores_match: string[];
+  temas_match: string[];
+}
+export interface NewsListResponse {
+  total: number; limit: number; offset: number;
+  data: NewsItem[];
+}
+export interface NewsStatsResponse {
+  period: string; total: number;
+  atores: Array<{ ator_id: string; n: number }>;
+  temas: Array<{ tema: string; n: number }>;
+  fontes: Array<{ fonte: string; n: number }>;
+}
+
+// ============== AGENT endpoints ==============
+export interface AgentDiagnoseResponse {
+  ator_id: string; period: string; model: string;
+  usage: { input_tokens: number; output_tokens: number };
+  diagnostico: string;
+}
+export interface AgentChatMessage { role: 'user'|'assistant'; content: string; }
+export interface AgentChatResponse {
+  model: string; reply: string;
+  usage: { input_tokens: number; output_tokens: number };
+}
+export interface AgentLabelsResponse {
+  model: string; label: string;
+  usage: { input_tokens: number; output_tokens: number };
+}
+
+// Estende objeto radarAPI
+Object.assign(radarAPI, {
+  news: (params: { ator_id?: string; tema?: string; fonte?: string; period?: string; limit?: number; offset?: number } = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k,v]) => v!==undefined && qs.set(k, String(v)));
+    return request<NewsListResponse>(`/api/news${qs.toString() ? '?'+qs : ''}`);
+  },
+  newsStats: (period: string = '30d') =>
+    request<NewsStatsResponse>(`/api/news/stats?period=${period}`),
+  agentDiagnose: (ator_id: string, period: string = '30d', contexto_extra?: string) =>
+    request<AgentDiagnoseResponse>('/api/agent/diagnose', {
+      method: 'POST',
+      body: JSON.stringify({ ator_id, period, contexto_extra }),
+    }),
+  agentChat: (messages: AgentChatMessage[], contexto_ator_id?: string, max_tokens: number = 800) =>
+    request<AgentChatResponse>('/api/agent/chat', {
+      method: 'POST',
+      body: JSON.stringify({ messages, contexto_ator_id, max_tokens }),
+    }),
+  agentLabels: (keywords: string[], n_posts?: number, contexto?: string) =>
+    request<AgentLabelsResponse>('/api/agent/labels', {
+      method: 'POST',
+      body: JSON.stringify({ keywords, n_posts, contexto }),
+    }),
+});
