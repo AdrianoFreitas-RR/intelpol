@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Activity, MessageSquare, DollarSign, Users, Sparkles, ArrowLeft, ExternalLink } from 'lucide-react';
-import { useDrilldown, useNews, useAgentDiagnose } from '../hooks/useRadar';
+import { useDrilldown, useNews, useAgentDiagnose, useFraming } from '../hooks/useRadar';
 import { HBarRanking } from '../../../components/charts/HBarRanking';
 
 const fmt = (n: number | null | undefined) => n == null ? '—' : new Intl.NumberFormat('pt-BR').format(n);
@@ -160,11 +160,7 @@ export function DrilldownPage() {
         </div>
       )}
 
-      {tab === 'discursos' && (
-        <div className='bg-zinc-900 border border-zinc-800 rounded-xl p-5 text-zinc-500 text-sm'>
-          Cluster temático (BERTopic) chega no D5. Por enquanto, use a aba <button onClick={()=>setTab('posts')} className='underline text-orange-400'>Posts</button> para ver discurso bruto.
-        </div>
-      )}
+      {tab === 'discursos' && <DiscursosPanel ator_id={id} />}
     </div>
   );
 }
@@ -194,6 +190,60 @@ function DiagnoseButton({ ator_id }: { ator_id: string }) {
         </div>
       )}
       {diag.error && <div className='text-xs text-red-400'>{diag.error.message}</div>}
+    </div>
+  );
+}
+
+
+function DiscursosPanel({ ator_id }: { ator_id: string }) {
+  const { data, isLoading, error } = useFraming(20);
+  if (isLoading) return <div className='text-zinc-500 text-sm p-5'>carregando clusters BERTopic…</div>;
+  if (error) return <div className='text-red-400 text-sm p-5'>erro: {error.message}</div>;
+  if (!data) return null;
+
+  // Match ator_id com possivel variante slug antiga (hiran_goncalves vs hiran_gon_alves)
+  const variants = [ator_id, ator_id.replace('goncalves','gon_alves').replace('damiao','dami_o')];
+  const meusClusters = data.cluster_por_ator
+    .filter(x => variants.includes(x.ator_id))
+    .sort((a, b) => b.n - a.n);
+
+  const clusterMap = new Map(data.clusters.map(c => [c.cluster_id, c]));
+  const total = meusClusters.reduce((s, x) => s + x.n, 0);
+
+  if (meusClusters.length === 0) {
+    return <div className='bg-zinc-900 border border-zinc-800 rounded-xl p-5 text-zinc-500 text-sm'>
+      Sem clusters BERTopic para este ator (mínimo 20 posts/cluster). Aguardando enrichment + rerun do topics_bertopic.py.
+    </div>;
+  }
+
+  return (
+    <div className='space-y-4'>
+      <div className='text-xs text-zinc-500'>{meusClusters.length} temas detectados em {total} posts atribuídos</div>
+      <div className='space-y-3'>
+        {meusClusters.slice(0, 10).map(mc => {
+          const c = clusterMap.get(mc.cluster_id);
+          const pct = total > 0 ? (mc.n / total) * 100 : 0;
+          return (
+            <div key={mc.cluster_id} className='bg-zinc-900 border border-zinc-800 rounded-xl p-4'>
+              <div className='flex items-start justify-between mb-2'>
+                <div>
+                  <div className='font-medium text-sm'>{c?.label?.replace(/^\d+_/, '').replace(/_/g,' ') ?? `Cluster #${mc.cluster_id}`}</div>
+                  <div className='text-xs text-zinc-500'>cluster #{mc.cluster_id} · rank {mc.rk} entre os atores</div>
+                </div>
+                <div className='text-right'>
+                  <div className='text-2xl font-semibold tabular-nums text-orange-400'>{mc.n}</div>
+                  <div className='text-xs text-zinc-500'>{pct.toFixed(1)}%</div>
+                </div>
+              </div>
+              {c?.top_keywords && (
+                <div className='text-xs text-zinc-400 font-mono leading-relaxed border-t border-zinc-800/40 pt-2 mt-2'>
+                  {c.top_keywords.slice(0, 200)}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
