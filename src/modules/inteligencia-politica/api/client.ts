@@ -312,3 +312,32 @@ export interface SystemPipelineResponse {
 Object.assign(radarAPI, {
   systemPipeline: () => request<SystemPipelineResponse>('/api/system/pipeline'),
 });
+
+// ============== POSTS endpoints ==============
+export interface Post {
+  ator_id: string; plataforma: string; post_id: string;
+  data_dt: string | null; tipo: string | null;
+  texto: string | null; link: string | null; imagem: string | null;
+  likes: number | null; comments: number | null; shares: number | null;
+  interactions: number | null; interaction_rate: number | null;
+  sentiment_pos_share: number | null; sentiment_neg_share: number | null;
+  is_reel_or_short: number | null; video_views: number | null;
+}
+export interface PostsListResponse {
+  total: number; limit: number; offset: number; sort: string;
+  data: Post[];
+}
+export interface PostsStatsResponse {
+  period: string; total: number;
+  per_plataforma: Array<{ plataforma: string; n: number; interactions_total: number; interactions_mean: number }>;
+  top_atores: Array<{ ator_id: string; n: number; interactions_total: number }>;
+}
+Object.assign(radarAPI, {
+  posts: (params: { ator_id?: string; plataforma?: string; tipo?: string; q?: string; period?: string; min_interactions?: number; sort?: string; limit?: number; offset?: number } = {}) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k,v]) => v!==undefined && qs.set(k, String(v)));
+    return request<PostsListResponse>(`/api/posts${qs.toString() ? '?'+qs : ''}`);
+  },
+  postsStats: (period: string = '30d') =>
+    request<PostsStatsResponse>(`/api/posts/stats?period=${period}`),
+});

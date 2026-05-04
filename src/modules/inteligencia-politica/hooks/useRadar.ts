@@ -143,3 +143,19 @@ export function useSystemPipeline() {
     refetchInterval: 30_000,
   });
 }
+
+import type { PostsListResponse, PostsStatsResponse } from '../api/client';
+export function usePosts(params: { ator_id?: string; plataforma?: string; tipo?: string; q?: string; period?: string; min_interactions?: number; sort?: string; limit?: number; offset?: number } = {}) {
+  return useQuery<PostsListResponse, RadarAPIError>({
+    queryKey: ['posts', params],
+    queryFn: () => (radarAPI as any).posts(params),
+    staleTime: STALE.short,
+  });
+}
+export function usePostsStats(period: string = '30d') {
+  return useQuery<PostsStatsResponse, RadarAPIError>({
+    queryKey: ['posts','stats',period],
+    queryFn: () => (radarAPI as any).postsStats(period),
+    staleTime: STALE.medium,
+  });
+}
