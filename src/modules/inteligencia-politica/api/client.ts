@@ -341,3 +341,19 @@ Object.assign(radarAPI, {
   postsStats: (period: string = '30d') =>
     request<PostsStatsResponse>(`/api/posts/stats?period=${period}`),
 });
+
+// ============== TIMESERIES endpoint ==============
+export interface TimeseriesPoint { date: string; value: number | null; }
+export interface TimeseriesResponse {
+  ator_id: string; plataforma: string; metric: string; period: string;
+  n_points: number;
+  mean_last14: number | null; std_last14: number | null;
+  data: TimeseriesPoint[];
+}
+Object.assign(radarAPI, {
+  timeseries: (params: { ator_id: string; plataforma: string; metric: string; period?: string }) => {
+    const qs = new URLSearchParams();
+    Object.entries(params).forEach(([k,v]) => v!==undefined && qs.set(k, String(v)));
+    return request<TimeseriesResponse>(`/api/timeseries?${qs.toString()}`);
+  },
+});

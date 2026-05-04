@@ -159,3 +159,13 @@ export function usePostsStats(period: string = '30d') {
     staleTime: STALE.medium,
   });
 }
+
+import type { TimeseriesResponse } from '../api/client';
+export function useTimeseries(params: { ator_id: string; plataforma: string; metric: string; period?: string }, enabled: boolean = true) {
+  return useQuery<TimeseriesResponse, RadarAPIError>({
+    queryKey: ['ts', params],
+    queryFn: () => (radarAPI as any).timeseries(params),
+    staleTime: STALE.short,
+    enabled,
+  });
+}
