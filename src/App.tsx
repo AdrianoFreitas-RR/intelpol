@@ -29,29 +29,39 @@ function PageFallback() {
 export default function App() {
   return (
     <FilterProvider><BrowserRouter basename={ROUTER_BASENAME}>
-      <AppShell>
-        <Suspense fallback={<PageFallback />}>
-          <Routes>
-            <Route path='/login' element={<LoginPage />} />
-            <Route path='/' element={<Navigate to='/overview' replace />} />
-            <Route path='/overview' element={<RadarOverviewPage />} />
-            <Route path='/atores' element={<AtoresListPage />} />
-            <Route path='/atores/:id' element={<DrilldownPage />} />
-            <Route path='/paid' element={<PaidPage />} />
-            <Route path='/anomalias' element={<AnomaliesPage />} />
-            <Route path='/news' element={<NewsPage />} />
-            <Route path='/agent' element={<AgentChatPage />} />
-            <Route path='/system' element={<SystemPage />} />
-            <Route path='/posts' element={<PostsPage />} />
-            <Route path='/comparar' element={<ComparePage />} />
-            <Route path='/heatmap' element={<HeatmapPage />} />
-            <Route path='/clusters' element={<ClusterTimelinePage />} />
-            <Route path='/apuracao' element={<ApuracaoPage />} />
-            <Route path='/diagnoses' element={<DiagnoseHistoryPage />} />
-            <Route path='*' element={<div className='p-8 text-zinc-500'>404 — rota não encontrada</div>} />
-          </Routes>
-        </Suspense>
-      </AppShell>
+      <Suspense fallback={<PageFallback />}>
+        <Routes>
+          <Route path='/login' element={<LoginPage />} />
+          <Route path='/*' element={<ShellWrap />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter></FilterProvider>
+  );
+}
+
+function ShellWrap() {
+  return (
+    <AppShell>
+      <Suspense fallback={<PageFallback />}>
+        <Routes>
+          <Route path='/' element={<Navigate to='/overview' replace />} />
+          <Route path='/overview' element={<RadarOverviewPage />} />
+          <Route path='/atores' element={<AtoresListPage />} />
+          <Route path='/atores/:id' element={<DrilldownPage />} />
+          <Route path='/paid' element={<PaidPage />} />
+          <Route path='/anomalias' element={<AnomaliesPage />} />
+          <Route path='/news' element={<NewsPage />} />
+          <Route path='/agent' element={<AgentChatPage />} />
+          <Route path='/system' element={<SystemPage />} />
+          <Route path='/posts' element={<PostsPage />} />
+          <Route path='/comparar' element={<ComparePage />} />
+          <Route path='/heatmap' element={<HeatmapPage />} />
+          <Route path='/clusters' element={<ClusterTimelinePage />} />
+          <Route path='/apuracao' element={<ApuracaoPage />} />
+          <Route path='/diagnoses' element={<DiagnoseHistoryPage />} />
+          <Route path='*' element={<div className='p-8 text-zinc-500'>404 — rota não encontrada</div>} />
+        </Routes>
+      </Suspense>
+    </AppShell>
   );
 }
