@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 const ROUTER_BASENAME = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || undefined;
 import { lazy, Suspense } from 'react';
 import { AppShell } from './components/AppShell';
+import { FilterProvider } from './contexts/FilterContext';
 
 const RadarOverviewPage = lazy(() => import('./modules/inteligencia-politica/pages/RadarOverviewPage').then(m => ({ default: m.RadarOverviewPage })));
 const AtoresListPage    = lazy(() => import('./modules/inteligencia-politica/pages/AtoresListPage').then(m => ({ default: m.AtoresListPage })));
@@ -15,6 +16,11 @@ const AgentChatPage     = lazy(() => import('./modules/inteligencia-politica/pag
 const SystemPage        = lazy(() => import('./modules/inteligencia-politica/pages/SystemPage').then(m => ({ default: m.SystemPage })));
 const PostsPage         = lazy(() => import('./modules/inteligencia-politica/pages/PostsPage').then(m => ({ default: m.PostsPage })));
 const LoginPage         = lazy(() => import('./modules/inteligencia-politica/pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const ComparePage       = lazy(() => import('./modules/inteligencia-politica/pages/ComparePage').then(m => ({ default: m.ComparePage })));
+const HeatmapPage       = lazy(() => import('./modules/inteligencia-politica/pages/HeatmapPage').then(m => ({ default: m.HeatmapPage })));
+const ClusterTimelinePage = lazy(() => import('./modules/inteligencia-politica/pages/ClusterTimelinePage').then(m => ({ default: m.ClusterTimelinePage })));
+const ApuracaoPage      = lazy(() => import('./modules/inteligencia-politica/pages/ApuracaoPage').then(m => ({ default: m.ApuracaoPage })));
+const DiagnoseHistoryPage = lazy(() => import('./modules/inteligencia-politica/pages/DiagnoseHistoryPage').then(m => ({ default: m.DiagnoseHistoryPage })));
 
 function PageFallback() {
   return <div className='p-12 text-zinc-500 text-sm'>carregando…</div>;
@@ -22,7 +28,7 @@ function PageFallback() {
 
 export default function App() {
   return (
-    <BrowserRouter basename={ROUTER_BASENAME}>
+    <FilterProvider><BrowserRouter basename={ROUTER_BASENAME}>
       <AppShell>
         <Suspense fallback={<PageFallback />}>
           <Routes>
@@ -37,10 +43,15 @@ export default function App() {
             <Route path='/agent' element={<AgentChatPage />} />
             <Route path='/system' element={<SystemPage />} />
             <Route path='/posts' element={<PostsPage />} />
+            <Route path='/comparar' element={<ComparePage />} />
+            <Route path='/heatmap' element={<HeatmapPage />} />
+            <Route path='/clusters' element={<ClusterTimelinePage />} />
+            <Route path='/apuracao' element={<ApuracaoPage />} />
+            <Route path='/diagnoses' element={<DiagnoseHistoryPage />} />
             <Route path='*' element={<div className='p-8 text-zinc-500'>404 — rota não encontrada</div>} />
           </Routes>
         </Suspense>
       </AppShell>
-    </BrowserRouter>
+    </BrowserRouter></FilterProvider>
   );
 }

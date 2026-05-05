@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Activity, BarChart3, AlertTriangle, Newspaper, Users, Sparkles, ChevronLeft, ChevronRight, Radio, Settings, MessageSquare, X } from 'lucide-react';
+import { Activity, BarChart3, AlertTriangle, Newspaper, Users, Sparkles, ChevronLeft, ChevronRight, Radio, Settings, MessageSquare, X, GitCompare, Grid3x3, Layers, Vote, History } from 'lucide-react';
 
 const NAV = [
   { to: '/overview',  label: 'Overview',   icon: Activity },
@@ -9,6 +9,11 @@ const NAV = [
   { to: '/news',      label: 'Noticias',   icon: Newspaper },
   { to: '/posts',     label: 'Posts',      icon: MessageSquare },
   { to: '/agent',     label: 'AgentDock',  icon: Sparkles },
+  { to: '/comparar',  label: 'Comparar',   icon: GitCompare },
+  { to: '/clusters',  label: 'Clusters',   icon: Layers },
+  { to: '/heatmap',   label: 'Heatmap',    icon: Grid3x3 },
+  { to: '/apuracao',  label: 'Apuracao',   icon: Vote },
+  { to: '/diagnoses', label: 'Diagnoses',  icon: History },
   { to: '/system',    label: 'Sistema',    icon: Settings },
 ];
 
