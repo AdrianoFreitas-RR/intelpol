@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+// BASE_URL é injetado pelo Vite (default '/'; pode virar '/app/' se VITE_BASE='/app/')
+const ROUTER_BASENAME = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || undefined;
 import { lazy, Suspense } from 'react';
 import { AppShell } from './components/AppShell';
 
@@ -11,6 +14,7 @@ const NewsPage          = lazy(() => import('./modules/inteligencia-politica/pag
 const AgentChatPage     = lazy(() => import('./modules/inteligencia-politica/pages/AgentChatPage').then(m => ({ default: m.AgentChatPage })));
 const SystemPage        = lazy(() => import('./modules/inteligencia-politica/pages/SystemPage').then(m => ({ default: m.SystemPage })));
 const PostsPage         = lazy(() => import('./modules/inteligencia-politica/pages/PostsPage').then(m => ({ default: m.PostsPage })));
+const LoginPage         = lazy(() => import('./modules/inteligencia-politica/pages/LoginPage').then(m => ({ default: m.LoginPage })));
 
 function PageFallback() {
   return <div className='p-12 text-zinc-500 text-sm'>carregando…</div>;
@@ -18,10 +22,11 @@ function PageFallback() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={ROUTER_BASENAME}>
       <AppShell>
         <Suspense fallback={<PageFallback />}>
           <Routes>
+            <Route path='/login' element={<LoginPage />} />
             <Route path='/' element={<Navigate to='/overview' replace />} />
             <Route path='/overview' element={<RadarOverviewPage />} />
             <Route path='/atores' element={<AtoresListPage />} />

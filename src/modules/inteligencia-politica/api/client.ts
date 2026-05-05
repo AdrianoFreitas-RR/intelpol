@@ -19,6 +19,11 @@ export class RadarAPIError extends Error {
   }
 }
 
+function authHeaders(): Record<string, string> {
+  const t = typeof localStorage !== "undefined" ? localStorage.getItem("intelpol_token") : "";
+  return t ? { Authorization: `Bearer ${t}` } : {};
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -26,9 +31,14 @@ async function request<T>(
   const url = `${BASE_URL}${path}`;
   const res = await fetch(url, {
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...options.headers },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...options.headers },
     ...options,
   });
+
+  if (res.status === 401 && typeof window !== "undefined" && !window.location.pathname.endsWith("/login")) {
+    window.location.href = "/app/login";
+    throw new RadarAPIError("unauthorized -> redirect login", 401);
+  }
 
   if (!res.ok) {
     let detail: unknown = undefined;
@@ -38,13 +48,31 @@ async function request<T>(
       detail = await res.text();
     }
     throw new RadarAPIError(
-      `${options.method || "GET"} ${path} → HTTP ${res.status}`,
+      `${options.method || "GET"} ${path} -> HTTP ${res.status}`,
       res.status,
       detail,
     );
   }
 
   return res.json();
+}
+
+export async function loginToken(token: string): Promise<boolean> {
+  const res = await fetch(`${BASE_URL}/api/auth/login`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  if (res.ok) {
+    localStorage.setItem("intelpol_token", token);
+    return true;
+  }
+  return false;
+}
+
+export function logoutToken(): void {
+  localStorage.removeItem("intelpol_token");
 }
 
 export const radarAPI = {
